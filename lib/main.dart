@@ -4,6 +4,9 @@ void main() {
   runApp(
     MaterialApp(
       home: Scaffold(
+        appBar: AppBar(
+          title: Text('I am rich'),
+        ),
         body: Center(
           child: Text(
             'Hello World!',
