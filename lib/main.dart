@@ -2,56 +2,145 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import 'package:audioplayers/audioplayers.dart';
+// import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_simple_app/quiz_brain.dart';
 // import 'package:audioplayers/audio_cache.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
+
+QuizBrain quizBrain = QuizBrain();
 
 void main() {
-  runApp(XylophoneApp());
+  runApp(Quizzler());
 }
 
-class XylophoneApp extends StatelessWidget {
-  void playAudio(int num) {
-    final player = AudioPlayer();
-    player.play(AssetSource('explosion$num.mp3'));
-  }
-
-  Expanded buildKey({Color? color, required int soundNumber}) {
-    return Expanded(
-      child: TextButton(
-        style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all<Color>(Colors.teal),
-        ),
-        onPressed: () {
-          playAudio(soundNumber);
-        },
-        child: const Text(
-          'サンプル',
-          // style: TextStyle(color: color),
-        ),
-      ),
-    );
-  }
-
+class Quizzler extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        backgroundColor: Colors.black,
         body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              buildKey(color: Colors.red, soundNumber: 1),
-              buildKey(color: Colors.orange, soundNumber: 2),
-              buildKey(color: Colors.yellow, soundNumber: 3),
-              buildKey(color: Colors.green, soundNumber: 4),
-              buildKey(color: Colors.teal, soundNumber: 5),
-              buildKey(color: Colors.blue, soundNumber: 6),
-              buildKey(color: Colors.purple, soundNumber: 7),
-            ],
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10.0),
+            child: QuizPage(),
           ),
         ),
       ),
+    );
+  }
+}
+
+class QuizPage extends StatefulWidget {
+  @override
+  _QuizPageState createState() => _QuizPageState();
+}
+
+class _QuizPageState extends State<QuizPage> {
+  List<Icon> scoreKeeper = [];
+
+  void checkAnswer(bool userPickedAnswer) {
+    bool correctAnswer = quizBrain.getCorrectAnswer();
+
+    setState(() {
+      if (quizBrain.isFinished()) {
+        Alert(
+          context: context,
+          title: "終了！",
+          desc: "お疲れ様でした",
+          buttons: [
+            DialogButton(
+              child: Text(
+                "再挑戦",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                ),
+              ),
+              onPressed: () => Navigator.pop(context),
+              width: 120,
+            )
+          ],
+        ).show();
+
+        quizBrain.reset();
+        scoreKeeper = [];
+      } else {
+        if (userPickedAnswer == correctAnswer) {
+          scoreKeeper.add(Icon(
+            Icons.check,
+            color: Colors.green,
+          ));
+        } else {
+          scoreKeeper.add(Icon(
+            Icons.close,
+            color: Colors.red,
+          ));
+        }
+        quizBrain.nextQuestion();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Expanded(
+          flex: 5,
+          child: Padding(
+            padding: EdgeInsets.all(10.0),
+            child: Center(
+              child: Text(
+                quizBrain.getQuestionText(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 25.0,
+                ),
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.all(15.0),
+            child: TextButton(
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.teal),
+              ),
+              onPressed: () {
+                checkAnswer(true);
+              },
+              child: Icon(
+                Icons.fiber_manual_record_outlined,
+                color: Colors.white,
+                size: 50,
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.all(15.0),
+            child: TextButton(
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.teal),
+              ),
+              onPressed: () {
+                checkAnswer(false);
+              },
+              child: Icon(
+                Icons.close,
+                color: Colors.white,
+                size: 50,
+              ),
+            ),
+          ),
+        ),
+        Row(
+          children: scoreKeeper,
+        )
+      ],
     );
   }
 }
